@@ -10,7 +10,7 @@ const router = Router()
 
 // router.put('/update-user/:id', update)
 
-// router.delete('/delete-user/:id', delete)
+// router.delete('/delete-user/:id', deleteById)
 
 export default router
 
