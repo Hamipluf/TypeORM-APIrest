@@ -1,19 +1,26 @@
-import { ErrorRequestHandler, type Request, type Response } from "express"
+import { type Request, type Response } from "express"
 import customResponses from "../utils/customResponse";
 import { Users } from "../entities/Users";
 import database from "../DB";
+import { hashData } from "../utils/hashData";
 const dataSource = database.getDataSource()
 const userRepository = dataSource.getRepository(Users)
 export const create = async (req: Request, res: Response) => {
-    const { first_name, last_name } = req.body
-    if (!first_name || !last_name) {
+    const { first_name, last_name, password, email } = req.body
+    if (!first_name || !last_name || !password || !email) {
         res.status(404).json(customResponses.badResponse(404, "Faltan campos a completar."))
     }
     try {
         const user = new Users()
+        const hashPass = await hashData(password)
+        if (hashPass.error) {
+            res.status(404).json(customResponses.badResponse(404, hashPass.message || 'Error hasheando la contraseña.'))
+        }
         user.first_name = first_name,
             user.last_name = last_name,
-            await userRepository.save(user)
+            user.email = email,
+            user.password = hashPass.dataHash
+        await userRepository.save(user)
         return res.json(customResponses.responseOk(200, "User Created", user))
     } catch (error) {
         return res.status(500).json(customResponses.badResponse(500, "Error creando el user", error))

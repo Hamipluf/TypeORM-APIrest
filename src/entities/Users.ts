@@ -13,6 +13,13 @@ export class Users {
   @Column()
   last_name: string;
 
+  @Column()
+  email: string;
+
+  @Column()
+  password: string;
+
+
   @Column({ default: true })
   active: boolean;
 
