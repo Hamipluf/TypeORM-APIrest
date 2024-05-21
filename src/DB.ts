@@ -5,6 +5,8 @@ import {
     DATABASE_PORT,
     DATABASE_PASSWORD,
     DATABASE_NAME,
+    DATABASE_HOST,
+    DATABASE_USERNAME
 } from './config';
 class Database {
     // Declara una propiedad estática para almacenar la instancia única de la clase Database.
@@ -15,12 +17,13 @@ class Database {
     private constructor() {  // Define un constructor privado para evitar que se creen instancias directamente.
         this.dataSource = new DataSource({
             type: "postgres",
-            host: 'localhost',
+            host: DATABASE_HOST,
             port: parseInt(DATABASE_PORT || '5432', 10),
-            username: 'postgres',
+            username: DATABASE_USERNAME,
             password: DATABASE_PASSWORD,
             database: DATABASE_NAME,
             entities: [Users, Posts],
+            ssl: true,
             synchronize: true,  // Permite que TypeORM sincronice las entidades con la base de datos (útil para desarrollo).
         });
     }
@@ -38,8 +41,12 @@ class Database {
         // Comprueba si el DataSource no está inicializado.
         if (!this.dataSource.isInitialized) {
             // Inicializo la conexión a la base de datos.
-            await this.dataSource.initialize();
-            console.log("PostgreSQL is connected!");
+            try {
+                await this.dataSource.initialize();
+                console.log("PostgreSQL is connected!");
+            } catch (error) {
+                console.log("Error conectado a la base PostgreSQL", error)
+            }
         }
         return this.dataSource;
     }

@@ -2,13 +2,14 @@ import { type Request, type Response } from "express"
 import customResponses from "../utils/customResponse";
 import { Users } from "../entities/Users";
 import database from "../DB";
-import { hashData } from "../utils/hashData";
+import { compareData, hashData } from "../utils/hashData";
+import authManager from '../utils/jwtManager'
 const dataSource = database.getDataSource()
 const userRepository = dataSource.getRepository(Users)
 export const create = async (req: Request, res: Response) => {
     const { first_name, last_name, password, email } = req.body
     if (!first_name || !last_name || !password || !email) {
-        res.status(404).json(customResponses.badResponse(404, "Faltan campos a completar."))
+        res.status(400).json(customResponses.badResponse(400, "Faltan campos a completar."))
     }
     try {
         const user = new Users()
@@ -21,9 +22,34 @@ export const create = async (req: Request, res: Response) => {
             user.email = email,
             user.password = hashPass.dataHash
         await userRepository.save(user)
-        return res.json(customResponses.responseOk(200, "User Created", user))
+        const userJWT = {
+            ...user,
+            password: undefined
+        }
+        const token = authManager.generateToken(userJWT)
+        return token ? res.status(200).json(customResponses.responseOk(200, "User Created", { user: userJWT, token })) : res.status(400).json(customResponses.badResponse(400, 'Error al general el token', { user: userJWT, token }))
     } catch (error) {
         return res.status(500).json(customResponses.badResponse(500, "Error creando el user", error))
+    }
+}
+export const login = async (req: Request, res: Response) => {
+    const { email, password } = req.body
+    if (!password || !email) {
+        res.status(400).json(customResponses.badResponse(400, "Faltan campos a completar."))
+    }
+    try {
+        const user = await userRepository.findOneBy({ 'email': email })
+        const userJWT = { ...user, password: undefined }
+        const isPasswordCorrect = user?.password && (await compareData(password, user.password)).dataHash
+        if (isPasswordCorrect) {
+            const token = authManager.generateToken(userJWT)
+            return token ? res.status(200).json(customResponses.responseOk(200, `Bienvenido ${user.first_name}`, { user: userJWT, token })) : res.status(400).json(customResponses.badResponse(400, 'Error al general el token', { user: userJWT, token }))
+        } else {
+            return res.status(400).json(customResponses.badResponse(400, "Contraseña Incorrecta"))
+        }
+    } catch (error: any) {
+        console.log(error)
+        return res.status(500).json(customResponses.badResponse(500, "Error logeando al user", error.message))
     }
 }
 export const getAll = async (req: Request, res: Response) => {
@@ -80,6 +106,17 @@ export const deleteById = async (req: Request, res: Response) => {
         return res.status(500).json(customResponses.badResponse(500, "Error Eliminando el user", error.message))
 
     }
+
+
+
+}
+export const getCurrentUser = async (req: Request, res: Response) => {
+    // @ts-expect-error "Necesita tipado"
+    const { user } = req
+    return user.id ? res.status(200).json(customResponses.responseOk(200, "User encontrado", user)) : res.status(400).json(customResponses.badResponse(400, "No hay usuario logeado"))
+
+
+
 
 
 

@@ -1,10 +1,6 @@
 import bcrypt from "bcrypt";
-interface response {
-    error: boolean;
-    message?: string;
-    dataHash?: any
-}
-export async function hashData(data: string): Promise<response> {
+import { type responseHash } from "./interfaces/reposne";
+export async function hashData(data: string): Promise<responseHash> {
     try {
         const dataHshed = await bcrypt.hash(data, 10);
         return { error: false, dataHash: dataHshed };
@@ -13,7 +9,7 @@ export async function hashData(data: string): Promise<response> {
         return { error: true, message: "Error en hashar la contraseña" };
     }
 }
-export async function compareData(data: string, dataDB: string): Promise<response> {
+export async function compareData(data: string, dataDB: string): Promise<responseHash> {
     try {
         const dataCompared = await bcrypt.compare(data, dataDB);
         return { error: false, dataHash: dataCompared };
