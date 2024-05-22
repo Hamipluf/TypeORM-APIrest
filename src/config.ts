@@ -8,5 +8,6 @@ export const {
     DATABASE_HOST,
     DATABASE_USERNAME,
     JWS_SECRET,
+    APP_PORT,
 } = process.env;
 
