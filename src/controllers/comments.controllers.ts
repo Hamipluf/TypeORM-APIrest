@@ -132,7 +132,7 @@ export const update = async (req: Request, res: Response) => {
             }
         });
         // Si el comentario no lo creo el user loggeado no lo puede modificar
-        if (comment?.user.id !== user.id) {
+        if (comment ? comment?.user.id !== user.id : false) {
             return res.status(404).json(customResponses.badResponse(404, "Solo el autor del comentario puede modificarlo."));
         } else {
             const commentUpdated = await commentRepository.update({ id: parseInt(id) }, { [field]: new_value });

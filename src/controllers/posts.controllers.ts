@@ -148,7 +148,7 @@ export const deleteById = async (req: Request, res: Response) => {
                 }
             }
         })
-        if (post?.owner.id !== user.id) {
+        if (post ? post?.owner.id !== user.id : false) {
             return res.status(404).json(customResponses.badResponse(404, "Solo el autor del post puede eliminarlo."))
         } else {
             const postDeleted = await postsRepository.delete({ id: parseInt(id) });
