@@ -19,12 +19,27 @@ export const create = async (req: Request, res: Response) => {
         if (!userDB) {
             return res.status(404).json(customResponses.badResponse(404, "Necesitas crear un usuario para poder crear un post."))
         } else {
-            const post = new Posts()
-            post.title = title,
-                post.content = content,
-                post.owner = user.id
-            await postsRepository.save(post)
-            return res.json(customResponses.responseOk(200, "Post Creado", post))
+            const newPost = new Posts()
+            newPost.title = title,
+                newPost.content = content,
+                newPost.owner = user.id
+            await postsRepository.save(newPost)
+            const postById = await postsRepository.findOne({
+                where: {
+                    id: newPost.id,
+                },
+                relations: ["owner"],
+                select: {
+                    owner: {
+                        id: true,
+                        first_name: true,
+                        last_name: true,
+                        email: true,
+                        active: true
+                    }
+                }
+            })
+            return res.json(customResponses.responseOk(200, "Post Creado", postById))
 
         }
     } catch (error: any) {
@@ -36,6 +51,15 @@ export const getAll = async (req: Request, res: Response) => {
         const allPosts = await postsRepository.find({
             relations: {
                 owner: true
+            },
+            select: {
+                owner: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    email: true,
+                    active: true
+                }
             }
         })
         return allPosts.length > 0 ? res.status(200).json(customResponses.responseOk(200, "Todos los posts", allPosts)) : res.status(200).json(customResponses.responseOk(204, "No hay posts todavia.", allPosts))
