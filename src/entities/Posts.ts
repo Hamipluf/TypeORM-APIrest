@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, JoinColumn, ManyToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, JoinColumn, ManyToOne, CreateDateColumn, OneToMany } from "typeorm";
 import { Users } from "./Users";
+import { Comments } from './Comments'
 
 @Entity('posts')
 export class Posts {
@@ -11,6 +12,12 @@ export class Posts {
 
     @Column()
     content: string;
+
+    @CreateDateColumn()
+    created_at: Date;
+
+    @OneToMany(() => Comments, comment => comment.post)
+    comments: Comments[];
 
     @ManyToOne(() => Users, user => user.posts)
     @JoinColumn({ name: 'user_id' })

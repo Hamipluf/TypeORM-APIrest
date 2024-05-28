@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 import { Users } from './entities/Users';
 import { Posts } from './entities/Posts';
+import { Comments } from './entities/Comments';
 import {
     DATABASE_PORT,
     DATABASE_PASSWORD,
@@ -22,7 +23,7 @@ class Database {
             username: DATABASE_USERNAME,
             password: DATABASE_PASSWORD,
             database: DATABASE_NAME,
-            entities: [Users, Posts],
+            entities: [Users, Posts, Comments],
             ssl: true,
             synchronize: true,  // Permite que TypeORM sincronice las entidades con la base de datos (útil para desarrollo).
         });

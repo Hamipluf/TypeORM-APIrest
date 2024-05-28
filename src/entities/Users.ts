@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, UpdateDateColumn, CreateDateColumn, ManyToMany, JoinTable, OneToMany, JoinColumn } from 'typeorm'
 import { Posts } from './Posts';
+import { Comments } from './Comments';
 
 @Entity('users')
 export class Users {
@@ -32,5 +33,8 @@ export class Users {
 
   @OneToMany(() => Posts, post => post.owner)
   posts: Posts[]
+
+  @OneToMany(() => Comments, comment => comment.user)
+  comments: Comments[];
 
 }

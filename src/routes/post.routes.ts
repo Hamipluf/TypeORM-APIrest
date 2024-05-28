@@ -9,9 +9,9 @@ router.get('/:id', getById)
 // Solo si esta logeado puede crear un post 
 router.post('/create-post', authMIddleware, create)
 
-router.put('/update-post/:id', update)
+router.put('/update-post/:id', authMIddleware, update)
 
-router.delete('/delete-post/:id', deleteById)
+router.delete('/delete-post/:id', authMIddleware, deleteById)
 
 export default router
 

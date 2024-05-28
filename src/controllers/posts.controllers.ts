@@ -53,9 +53,16 @@ export const getById = async (req: Request, res: Response) => {
             where: {
                 id: parseInt(id),
             },
-            relations: {
-                owner: true
-            },
+            relations: ["owner"],
+            select: {
+                owner: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    email: true,
+                    active: true
+                }
+            }
         })
         const responsePost = post ? customResponses.responseOk(200, "Post Encontrado", post) : customResponses.responseOk(201, `No se encontro el post con id ${id}`)
         return res.json(responsePost)
@@ -65,6 +72,8 @@ export const getById = async (req: Request, res: Response) => {
 }
 export const update = async (req: Request, res: Response) => {
     const { id } = req.params
+    // @ts-expect-error "Necesita tipado"
+    const { user } = req
     const { newValue, field }: { newValue: string, field: string } = req.body
     const updateFields = ['title', 'content',]
     if (!id) {
@@ -75,21 +84,54 @@ export const update = async (req: Request, res: Response) => {
     }
 
     try {
-        const postUpdated = await postsRepository.update({ id: parseInt(id) }, { [field]: newValue })
-        return postUpdated.affected === 0 ? res.status(404).json(customResponses.badResponse(404, "Post no encontrado",)) : res.json(customResponses.responseOk(200, `Se actualizo el post con id ${id}`, postUpdated))
+        const post = await postsRepository.findOne({
+            where: {
+                id: parseInt(id),
+            },
+            relations: ["owner"],
+            select: {
+                owner: {
+                    id: true,
+                }
+            }
+        })
+        if (post?.owner.id !== user.id) {
+            return res.status(404).json(customResponses.badResponse(404, "Solo el autor del post puede modificarlo."))
+        } else {
+            const postUpdated = await postsRepository.update({ id: parseInt(id) }, { [field]: newValue })
+            return postUpdated.affected === 0 ? res.status(404).json(customResponses.badResponse(404, "Post no encontrado",)) : res.json(customResponses.responseOk(200, `Se actualizo el post con id ${id}`, postUpdated))
+        }
     } catch (error: any) {
         return res.status(500).json(customResponses.badResponse(500, "Error Actualizando el post", error.message))
     }
 }
 export const deleteById = async (req: Request, res: Response) => {
     const { id } = req.params
+    // @ts-expect-error "Necesita tipado"
+    const { user } = req
     if (!id) {
         res.status(404).json(customResponses.badResponse(404, "Faltan campos a completar."))
     }
     try {
-        const postDeleted = await postsRepository.delete({ id: parseInt(id) });
+        const post = await postsRepository.findOne({
+            where: {
+                id: parseInt(id),
+            },
+            relations: ["owner"],
+            select: {
+                owner: {
+                    id: true,
+                }
+            }
+        })
+        if (post?.owner.id !== user.id) {
+            return res.status(404).json(customResponses.badResponse(404, "Solo el autor del post puede eliminarlo."))
+        } else {
+            const postDeleted = await postsRepository.delete({ id: parseInt(id) });
+            return postDeleted.affected === 0 ? res.status(404).json(customResponses.badResponse(404, "Post no encontrado",)) : res.status(204).json(customResponses.responseOk(204, `Post ${id} eliminado correctamente.`));
+        }
 
-        return postDeleted.affected === 0 ? res.status(404).json(customResponses.badResponse(404, "Post no encontrado",)) : res.status(204).json(customResponses.responseOk(204, `Post ${id} eliminado correctamente.`));
+
 
 
     } catch (error: any) {
